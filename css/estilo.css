@@ -1,0 +1,483 @@
+/* Leitor gigante. As cores e medidas moram em tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  font: 13px/1.4 var(--fonte-ui);
+  color: var(--barra-texto);
+  background: var(--barra);
+  overflow: hidden;
+}
+
+::selection {
+  background: rgba(196, 40, 28, 0.25);
+}
+
+/* ---------- barras (topo e rodapé) ---------- */
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e2) var(--e4);
+  padding: var(--e3) var(--e4);
+  background: var(--barra);
+  color: var(--barra-texto);
+}
+
+.barra-rodape {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  padding: var(--e2) var(--e4);
+  font: 12px/1.4 var(--fonte-mono);
+  color: var(--barra-fraco);
+}
+
+.rodape-pos {
+  color: var(--barra-texto);
+  white-space: nowrap;
+}
+
+.rodape-meio {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rodape-dica {
+  white-space: nowrap;
+}
+
+.marca {
+  font: 600 11px/1 var(--fonte-mono);
+  letter-spacing: 0.14em;
+  color: var(--barra-texto);
+}
+
+.marca span {
+  color: var(--acao-na-barra);
+  padding: 0 1px;
+}
+
+.arquivo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e2);
+  min-width: 0;
+}
+
+.arquivo-nome {
+  max-width: 30ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arquivo-tam {
+  font: 12px/1 var(--fonte-mono);
+  color: var(--barra-fraco);
+  white-space: nowrap;
+}
+
+/* ---------- controles ---------- */
+
+.busca {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  flex: 1 1 440px;
+  max-width: 680px;
+  margin: 0;
+}
+
+.ir {
+  flex: 0 1 190px;
+  margin: 0;
+}
+
+.ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-left: auto;
+}
+
+.campo {
+  height: var(--altura-controle);
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--e3);
+  border: 1px solid var(--barra-borda);
+  border-radius: var(--raio);
+  background: var(--barra-campo);
+  color: var(--barra-texto);
+  font: inherit;
+  transition: border-color var(--rapido);
+}
+
+.campo::placeholder {
+  color: var(--barra-fraco);
+}
+
+.campo:disabled {
+  opacity: 0.45;
+}
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--altura-controle);
+  padding: 0 var(--e4);
+  border: 1px solid var(--barra-borda);
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  color: var(--barra-texto);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--rapido),
+    border-color var(--rapido),
+    color var(--rapido);
+}
+
+.botao:hover:not(:disabled) {
+  background: #272b33;
+  border-color: #454a55;
+}
+
+.botao:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.botao-quadrado {
+  flex: 0 0 var(--altura-controle);
+  width: var(--altura-controle);
+  padding: 0;
+  font-weight: 600;
+}
+
+.botao[aria-pressed='true'] {
+  border-color: var(--acao-na-barra);
+  color: var(--barra-texto);
+}
+
+.botao-acao {
+  background: var(--barra-texto);
+  border-color: var(--barra-texto);
+  color: var(--barra);
+  font-weight: 600;
+}
+
+.botao-acao:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.botao-grande {
+  height: 44px;
+  padding: 0 var(--e5);
+  font-size: 15px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--acao-na-barra);
+  outline-offset: 2px;
+}
+
+.leitura :focus-visible {
+  outline-color: var(--acao);
+}
+
+.busca-resultado {
+  min-width: 14ch;
+  font: 12px/1.2 var(--fonte-mono);
+  color: var(--barra-fraco);
+  white-space: nowrap;
+}
+
+.busca-resultado.nada {
+  color: var(--acao-na-barra);
+}
+
+/* ---------- leitura ---------- */
+
+.leitura {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--largura-regua);
+  min-height: 0;
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+.texto {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--e4) var(--e3) var(--e4) var(--e6);
+  overflow: hidden;
+  font: var(--fs) / var(--lh) var(--fonte-mono);
+  font-variant-ligatures: none;
+  font-kerning: none;
+  white-space: pre;
+  tab-size: 4;
+  outline-offset: -2px;
+  touch-action: none;
+}
+
+.texto .l {
+  height: var(--lh);
+}
+
+.texto .g {
+  margin-right: 1ch;
+}
+
+.texto mark {
+  background: var(--acerto);
+  color: inherit;
+  border-radius: 2px;
+}
+
+.texto mark.atual {
+  background: var(--acao);
+  color: #ffffff;
+}
+
+.sonda {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
+}
+
+.mono {
+  font: var(--fs) / var(--lh) var(--fonte-mono);
+  font-variant-ligatures: none;
+  font-kerning: none;
+}
+
+/* ---------- régua ---------- */
+
+.regua {
+  position: relative;
+  min-height: 0;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.regua canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.regua-dica {
+  position: absolute;
+  right: calc(100% - var(--e2));
+  padding: var(--e1) var(--e2);
+  transform: translateY(-50%);
+  border-radius: 6px;
+  background: var(--tinta);
+  color: var(--papel);
+  font: 12px/1.3 var(--fonte-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--sombra);
+  z-index: 3;
+}
+
+/* ---------- tela vazia ---------- */
+
+.vazio {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--e6);
+  padding: var(--e6) clamp(var(--e4), 8vw, 160px);
+  background: var(--papel);
+}
+
+.vazio-frase {
+  max-width: 28em;
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 52px);
+  font-weight: 300;
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  color: var(--tinta-3);
+}
+
+.vazio-forte {
+  color: var(--tinta);
+}
+
+.vazio-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+}
+
+.vazio .botao {
+  border-color: var(--linha-forte);
+  color: var(--tinta);
+}
+
+.vazio .botao:hover:not(:disabled) {
+  background: #e9ebef;
+  border-color: var(--tinta-3);
+}
+
+.vazio .botao-acao {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--papel);
+}
+
+.vazio .botao-acao:hover:not(:disabled) {
+  background: #2a2e36;
+  border-color: #2a2e36;
+}
+
+.rotulo {
+  margin: 0;
+  font: 11px/1.4 var(--fonte-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.solte {
+  position: absolute;
+  inset: var(--e3);
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--acao);
+  border-radius: var(--raio);
+  background: rgba(244, 245, 247, 0.94);
+  color: var(--acao);
+  font-size: 22px;
+  font-weight: 300;
+  pointer-events: none;
+}
+
+/* ---------- aviso rápido ---------- */
+
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  z-index: 10;
+  max-width: min(90vw, 560px);
+  padding: var(--e2) var(--e4);
+  transform: translateX(-50%);
+  border-radius: var(--raio-pilula);
+  background: var(--tinta);
+  color: var(--papel);
+  box-shadow: var(--sombra);
+  font-size: 13px;
+  animation: entra var(--normal) ease-out;
+}
+
+@keyframes entra {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+/* ---------- telas menores ---------- */
+
+@media (max-width: 1000px) {
+  .rodape-dica {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .barra {
+    padding: var(--e2) var(--e3);
+  }
+
+  .barra {
+    gap: var(--e2);
+  }
+
+  .campo {
+    font-size: 16px; /* 16px no celular: o iPhone não dá zoom ao tocar no campo */
+  }
+
+  .marca,
+  #copiar {
+    display: none;
+  }
+
+  .busca {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .ir {
+    flex: 1 1 90px;
+  }
+
+  .ferramentas {
+    flex: 0 1 auto;
+    margin-left: auto;
+    flex-wrap: nowrap;
+  }
+
+  .texto {
+    padding-left: var(--e3);
+  }
+
+  .rodape-meio {
+    display: none;
+  }
+
+  .vazio {
+    padding: var(--e5) var(--e4);
+  }
+}
+
+/* ---------- quem pediu menos movimento ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso {
+    animation: none;
+  }
+
+  .botao,
+  .campo {
+    transition: none;
+  }
+}

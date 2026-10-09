@@ -1,0 +1,9 @@
+{
+  "name": "leitor-gigante",
+  "private": true,
+  "type": "module",
+  "description": "Abre arquivo de texto de qualquer tamanho no navegador sem travar: só o pedaço visível é lido.",
+  "scripts": {
+    "test": "node --test \"testes/*.test.js\""
+  }
+}

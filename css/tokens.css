@@ -1,0 +1,64 @@
+/* Tudo que dá para trocar na mão fica aqui: cores, letras, espaços e tempos.
+   O resto do visual (estilo.css) só usa estas variáveis. */
+
+:root {
+  /* BARRAS (em cima e embaixo): escuras, para a tela de leitura ser a clara.
+     Barra, leitura, barra: os três blocos alternam escuro, claro, escuro. */
+  --barra: #15171c;
+  --barra-campo: #1f2228;
+  --barra-borda: #2e323b;
+  --barra-texto: #e8eaee;
+  --barra-fraco: #9aa1ad;
+
+  /* LEITURA: papel frio, tinta quase preta e três níveis de cinza. */
+  --papel: #f4f5f7;
+  --tinta: #14161a;
+  --tinta-2: #3c424b;
+  --tinta-3: #5d636d;
+  --linha: #d8dbe0;
+  --linha-forte: #b9bec6;
+
+  /* A ÚNICA COR DE AÇÃO: vermelho de tinta. Marca acerto de busca e posição.
+     Na barra escura usa o tom mais claro, para manter o contraste. */
+  --acao: #c4281c;
+  --acao-na-barra: #ff6a5c;
+  --acerto: rgba(196, 40, 28, 0.17);
+
+  /* LETRAS: nenhuma fonte baixada (peso zero). O mono é o conteúdo. */
+  --fonte-ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --fonte-mono: 'Cascadia Mono', 'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace;
+
+  /* TAMANHO DA LETRA DA LEITURA: o JS troca --fs (botões A− e A+). */
+  --fs: 16px;
+  --lh: calc(var(--fs) * 1.5);
+
+  /* ESCALA DE ESPAÇO */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+  --e7: 48px;
+  --e8: 64px;
+
+  /* RAIO e SOMBRA: um valor por nível */
+  --raio: 8px;
+  --raio-pilula: 999px;
+  --sombra: 0 6px 24px rgba(20, 22, 26, 0.18);
+
+  /* TEMPOS */
+  --rapido: 150ms;
+  --normal: 300ms;
+
+  /* MEDIDAS FIXAS */
+  --altura-controle: 32px;
+  --largura-regua: 96px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --largura-regua: 64px;
+    --altura-controle: 44px; /* alvo de toque de 44px no celular */
+  }
+}

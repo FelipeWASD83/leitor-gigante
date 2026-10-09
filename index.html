@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Leitor gigante</title>
+  <meta name="description" content="Abre arquivo de texto de qualquer tamanho sem travar: só o pedaço que aparece na tela é lido do disco.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <header class="barra barra-topo" id="topo">
+    <div class="marca" aria-label="Leitor gigante">LEITOR<span>/</span>GIGANTE</div>
+
+    <div class="arquivo" id="arquivo" hidden>
+      <span class="arquivo-nome" id="arquivo-nome"></span>
+      <span class="arquivo-tam" id="arquivo-tam"></span>
+    </div>
+
+    <form class="busca" id="form-busca" role="search" autocomplete="off">
+      <input class="campo" id="busca" type="text" name="busca" placeholder="Buscar no arquivo inteiro" aria-label="Buscar no arquivo inteiro" spellcheck="false" disabled>
+      <button class="botao botao-quadrado" id="caixa" type="button" aria-pressed="true" title="Ignorar maiúsculas e minúsculas (A–Z)" disabled>Aa</button>
+      <button class="botao botao-quadrado" id="busca-ant" type="button" aria-label="Acerto anterior (Shift+Enter)" title="Anterior (Shift+Enter)" disabled>
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 10.5 8 5.5l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="botao botao-quadrado" id="busca-prox" type="submit" aria-label="Próximo acerto (Enter)" title="Próximo (Enter)" disabled>
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 5.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <output class="busca-resultado" id="busca-resultado" aria-live="polite"></output>
+    </form>
+
+    <form class="ir" id="form-ir" autocomplete="off">
+      <input class="campo campo-curto" id="ir" type="text" name="ir" placeholder="Ir para: 50 %, 100M…" aria-label="Ir para uma posição" spellcheck="false" disabled>
+    </form>
+
+    <div class="ferramentas">
+      <button class="botao botao-quadrado" id="fonte-menos" type="button" aria-label="Letra menor" title="Letra menor" disabled>A−</button>
+      <button class="botao botao-quadrado" id="fonte-mais" type="button" aria-label="Letra maior" title="Letra maior" disabled>A+</button>
+      <button class="botao" id="agrupar" type="button" aria-pressed="false" title="Separa os caracteres de 10 em 10, só na tela (o arquivo não muda)" disabled>Grupos de 10</button>
+      <button class="botao" id="copiar" type="button" title="Copia o texto que está na tela" disabled>Copiar tela</button>
+      <button class="botao botao-acao" id="abrir" type="button">Abrir arquivo</button>
+    </div>
+  </header>
+
+  <main class="leitura" id="leitura">
+    <div class="texto" id="texto" tabindex="0" role="document" aria-label="Conteúdo do arquivo"></div>
+    <div class="regua" id="regua" role="slider" aria-label="Posição no arquivo" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <canvas id="regua-tela"></canvas>
+      <div class="regua-dica" id="regua-dica" hidden></div>
+    </div>
+
+    <section class="vazio" id="vazio">
+      <p class="vazio-frase"><span class="vazio-forte">Abra um arquivo de qualquer tamanho.</span> Só o pedaço que aparece na tela é lido do disco, então o tamanho do arquivo não pesa.</p>
+      <div class="vazio-botoes">
+        <button class="botao botao-acao botao-grande" id="abrir-vazio" type="button">Escolher arquivo</button>
+        <button class="botao botao-grande" id="demo" type="button">Testar com 1 GB fictício</button>
+      </div>
+      <p class="rotulo">Arraste um arquivo para cá · nada sai do seu computador</p>
+    </section>
+
+    <div class="solte" id="solte" hidden>Solte para abrir</div>
+  </main>
+
+  <footer class="barra barra-rodape" id="rodape">
+    <span class="rodape-pos" id="pos">Nenhum arquivo aberto</span>
+    <span class="rodape-meio" id="meio"></span>
+    <span class="rodape-dica" id="dica">Roda do mouse rola · Shift acelera · arraste a régua · Ctrl+F busca</span>
+  </footer>
+
+  <input type="file" id="entrada" hidden>
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+  <span class="sonda mono" id="sonda" aria-hidden="true">0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</span>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
