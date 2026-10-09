@@ -25,9 +25,31 @@ abre na hora e a página usa uns 3 MB de memória.
    Enter vai para o próximo, Shift+Enter para o anterior. Onde há acertos,
    a régua fica marcada de vermelho. O botão **Aa** liga e desliga "ignorar
    maiúsculas" (só vale para A a Z, sem acento).
-5. **A− / A+** mudam a letra. **Grupos de 10** separa os caracteres de 10 em 10
-   só na tela (ótimo para ler dígitos; o arquivo não muda). **Copiar tela**
-   copia o texto que está aparecendo.
+5. **Zoom sem limite para afastar.** O contador no topo (`A−  100 %  A+`) é o
+   tamanho da letra: 100 % é a letra de 16 px. Quanto menor o zoom, mais
+   caracteres cabem na tela. Clique em A− ou A+, use **Ctrl + roda do mouse**,
+   ou digite o valor no contador e aperte Enter (aceita `35`, `12,5`; **Ctrl+0**
+   volta para 100). O rodapé mostra quantos caracteres estão na tela e quanto
+   tempo a pintura levou: use isso para me dizer em que zoom começa a lagar.
+   Um zoom abaixo de 63 % (letra menor que 10 px) não é lembrado ao recarregar,
+   para a página nunca abrir já travada.
+6. **Grupos de 10** separa os caracteres de 10 em 10 só na tela (ótimo para ler
+   dígitos; o arquivo não muda). **Copiar tela** copia o texto que está
+   aparecendo.
+
+### Quando você achar o zoom onde começa a lagar
+
+No arquivo `js/main.js`, procure a linha `const ZOOM_MINIMO = 0.1;` e troque o
+número pelo zoom (em %) que você quer como limite. Hoje o limite é 0,1 %, ou
+seja, na prática não existe.
+
+## Arquivos para testar
+
+Ficam em `C:\Users\felipe\Documents\arquivos-gigantes` (fora do projeto, para
+não pesar nos backups da nuvem): `10_elevado_50.txt` e `10_elevado_100.txt` (o
+número escrito, um 1 e os zeros: 51 e 101 caracteres), `9_elevado_9_elevado_9.txt`
+(369.693.100 dígitos) e `letras_aleatorias_369693100.txt` (o mesmo tamanho, só
+letras de a a z sorteadas).
 
 ## O que ele não faz
 

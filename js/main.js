@@ -4,7 +4,17 @@ import { criarLeitor } from './leitor.js';
 import { criarRegua } from './ui-regua.js';
 import { FonteBlob, FonteDemo } from './fonte.js';
 import { acharAdiante, acharAtras, contarAcertos, compilarConsulta } from './busca.js';
-import { formatarBytes, formatarNumero, formatarPercentual, interpretarPosicao } from './util.js';
+import {
+  FS_PADRAO,
+  formatarBytes,
+  formatarNumero,
+  formatarPercentual,
+  formatarZoom,
+  fsDeZoom,
+  interpretarPosicao,
+  interpretarZoom,
+  zoomDeFs,
+} from './util.js';
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -28,6 +38,7 @@ const el = {
   ir: $('ir'),
   fonteMenos: $('fonte-menos'),
   fonteMais: $('fonte-mais'),
+  zoom: $('zoom'),
   agrupar: $('agrupar'),
   copiar: $('copiar'),
   abrir: $('abrir'),
@@ -39,27 +50,39 @@ const el = {
   reguaTela: $('regua-tela'),
   reguaDica: $('regua-dica'),
 };
-const controlesDoArquivo = [el.busca, el.caixa, el.buscaAnt, el.buscaProx, el.ir, el.fonteMenos, el.fonteMais, el.agrupar, el.copiar];
+const controlesDoArquivo = [el.busca, el.caixa, el.buscaAnt, el.buscaProx, el.ir, el.fonteMenos, el.fonteMais, el.zoom, el.agrupar, el.copiar];
 
 // ---------- preferências (só a letra, os grupos e o "Aa") ----------
 
 const CHAVE = 'leitor-gigante:prefs:v1';
-const prefs = { fs: 16, agrupar: false, ignorarCaixa: true };
+const prefs = { fs: FS_PADRAO, agrupar: false, ignorarCaixa: true };
 try {
   Object.assign(prefs, JSON.parse(localStorage.getItem(CHAVE) ?? '{}'));
 } catch {
   /* sem armazenamento: segue com o padrão */
 }
+
+// ---------- zoom ----------
+// LIMITE DE AFASTAR: hoje não há limite prático (0,1 % = letra de 0,016 px).
+// Quando o Felipe disser em que zoom a tela começa a lagar, é só trocar o
+// número de ZOOM_MINIMO (em %, onde 100 = letra de 16 px).
+const ZOOM_MINIMO = 0.1;
+const ZOOM_MAXIMO = 400;
+const PASSO_ZOOM = 1.1; // cada clique em A− / A+ e cada giro da roda com Ctrl
+// Letra menor que isto não é lembrada ao recarregar: com a tela cheia de
+// caracteres minúsculos a página pode travar, e abrir já travada seria um beco sem saída.
+const FS_MINIMO_LEMBRADO = 10;
+
 const salvarPrefs = () => {
   try {
-    localStorage.setItem(CHAVE, JSON.stringify(prefs));
+    const gravar = { ...prefs, fs: prefs.fs >= FS_MINIMO_LEMBRADO ? prefs.fs : FS_PADRAO };
+    localStorage.setItem(CHAVE, JSON.stringify(gravar));
   } catch {
     /* sem armazenamento: tudo bem */
   }
 };
-const FS_MIN = 10;
-const FS_MAX = 32;
-prefs.fs = Math.max(FS_MIN, Math.min(FS_MAX, Number(prefs.fs) || 16));
+prefs.fs = Number(prefs.fs) > 0 ? Number(prefs.fs) : FS_PADRAO;
+if (prefs.fs < FS_MINIMO_LEMBRADO) prefs.fs = FS_PADRAO;
 
 // ---------- estado ----------
 
@@ -89,6 +112,10 @@ const leitor = criarLeitor({
   area: el.leitura,
   texto: el.texto,
   sonda: el.sonda,
+  aoMedir(s) {
+    ultimo = s;
+    atualizarRodape();
+  },
   aoErro: (erro) => avisar(`Não consegui ler o arquivo (apagado, movido ou sem permissão?): ${erro?.message ?? erro}`, 8000),
   aoAtualizar(s) {
     ultimo = s;
@@ -102,6 +129,7 @@ const leitor = criarLeitor({
 });
 leitor.definirFonte(prefs.fs);
 leitor.definirAgrupar(prefs.agrupar);
+el.zoom.value = formatarZoom(zoomDeFs(prefs.fs));
 
 // ---------- mensagens ----------
 
@@ -130,7 +158,8 @@ function atualizarRodape() {
   if (busca.sinal && !busca.sinal.cancelado && busca.total === null) {
     el.meio.textContent = `contando acertos… ${Math.round(busca.progresso * 100)} %`;
   } else {
-    el.meio.textContent = `${linhas} linhas × ${cols} colunas`;
+    const ms = (v) => (v < 1 ? '<1' : formatarNumero(v));
+    el.meio.textContent = `${linhas} × ${cols} · ${formatarNumero(ultimo.caracteres)} caracteres · pintura ${ms(ultimo.pinturaMs)} ms · quadro ${ms(ultimo.quadroMs)} ms`;
   }
 }
 
@@ -193,13 +222,43 @@ window.addEventListener('drop', (ev) => {
 
 // ---------- letra, grupos e copiar ----------
 
-function mudarFonte(delta) {
-  prefs.fs = Math.max(FS_MIN, Math.min(FS_MAX, prefs.fs + delta));
+function definirZoom(percentual) {
+  const z = Math.min(ZOOM_MAXIMO, Math.max(ZOOM_MINIMO, percentual));
+  prefs.fs = fsDeZoom(z);
   leitor.definirFonte(prefs.fs);
+  el.zoom.value = formatarZoom(z);
   salvarPrefs();
 }
-el.fonteMenos.addEventListener('click', () => mudarFonte(-1));
-el.fonteMais.addEventListener('click', () => mudarFonte(1));
+const zoomAtual = () => zoomDeFs(prefs.fs);
+el.fonteMenos.addEventListener('click', () => definirZoom(zoomAtual() / PASSO_ZOOM));
+el.fonteMais.addEventListener('click', () => definirZoom(zoomAtual() * PASSO_ZOOM));
+el.zoom.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  const z = interpretarZoom(el.zoom.value);
+  if (z === null) {
+    el.zoom.value = formatarZoom(zoomAtual());
+    avisar('Zoom: digite um número maior que zero, por exemplo 50.');
+  } else {
+    definirZoom(z);
+  }
+  el.texto.focus({ preventScroll: true });
+});
+el.zoom.addEventListener('blur', () => {
+  el.zoom.value = formatarZoom(zoomAtual()); // largou sem apertar Enter: volta ao valor que vale
+});
+
+// Ctrl + roda do mouse (ou pinça no touchpad) afasta e aproxima
+el.leitura.addEventListener(
+  'wheel',
+  (ev) => {
+    if (!fonte || !(ev.ctrlKey || ev.metaKey)) return;
+    ev.preventDefault();
+    const dy = ev.deltaMode === 1 ? ev.deltaY * 33 : ev.deltaY;
+    definirZoom(zoomAtual() * Math.pow(PASSO_ZOOM, -dy / 100));
+  },
+  { passive: false },
+);
 
 function pintarToggle(botao, ligado) {
   botao.setAttribute('aria-pressed', String(ligado));
@@ -385,6 +444,11 @@ window.addEventListener('keydown', (ev) => {
     ev.preventDefault();
     el.ir.focus();
     el.ir.select();
+    return;
+  }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key === '0' && fonte) {
+    ev.preventDefault();
+    definirZoom(100);
     return;
   }
   if (ev.key === 'F3' && fonte && el.busca.value) {

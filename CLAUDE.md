@@ -58,11 +58,11 @@ dele, está errada.
 | `js/fonte.js` | De onde vêm os bytes: `FonteBlob` (File/Blob), `FonteDemo` (1 GB de dígitos fictícios, sempre iguais) e o cache de blocos |
 | `js/busca.js` | Busca por fatias de 8 MB (com sobra na emenda), próximo, anterior, contagem total e densidade para a régua. Sem DOM, com teste |
 | `js/regua.js`, `js/util.js` | Contas da régua (marcas, rótulos compactos) e "ir para", formatação em pt-BR. Sem DOM, com teste |
-| `js/leitor.js` | A tela de leitura: mede, pede o layout, pinta as linhas, destaca os acertos, trata roda e toque. Não conhece botão nem busca |
+| `js/leitor.js` | A tela de leitura: mede, pede o layout, pinta as linhas, destaca os acertos, trata roda e toque, mede o tempo de pintura. Não conhece botão nem busca. A leitura supõe 1 byte por caractere e dobra se faltar (UTF-8): com a letra minúscula a tela tem milhões de caracteres e ler 4x por garantia custava centenas de MB |
 | `js/ui-regua.js` | A régua em canvas: marcas, faixa vermelha do trecho visível, faixas dos acertos, dica |
 | `js/main.js` | Liga tudo: abrir, arrastar e soltar, busca, "ir para", letra, grupos, copiar, teclado. Expõe `window.leitorGigante.abrirBlob(blob, nome)` para teste |
 | `css/tokens.css` | Cores, letras, espaços e tempos |
-| `testes/*.test.js` | `node --test "testes/*.test.js"` (36 testes em 09/10/2026) |
+| `testes/*.test.js` | `node --test "testes/*.test.js"` (39 testes em 09/10/2026) |
 
 Módulos ES: **não abre por `file://`**. Preview `leitor-gigante` no
 `.claude/launch.json` da raiz, porta **4342** (`abrir.bat` no uso). Regra nova
@@ -129,3 +129,40 @@ sistema (peso zero), mono = Cascadia Mono/Consolas.
   `await window.leitorGigante.abrirBlob(await (await fetch('/arquivo.txt')).blob(), 'x')`.
   A CSP libera `connect-src 'self'` por causa disso; o código do projeto não
   faz `fetch` nenhum.
+
+---
+
+## 7. Zoom sem limite (pedido dele em 09/10/2026)
+
+Ele pediu para remover o limite de afastar e para ter um contador, para dizer
+onde começa a lagar; esse ponto vira o limite novo.
+
+- **Onde mexer:** `ZOOM_MINIMO` no começo de `js/main.js` (em %, 100 = letra de
+  16 px; hoje 0,1). `ZOOM_MAXIMO` (400) e `PASSO_ZOOM` (1,1 por clique ou giro
+  de roda) ficam ao lado. Trocar o número é tudo que falta quando ele disser o
+  zoom.
+- **Contador:** campo `#zoom` no topo (digita e dá Enter), A−/A+, Ctrl+roda e
+  Ctrl+0. O rodapé mostra linhas x colunas, caracteres na tela, `pintura`
+  (montar o DOM + forçar o layout, medido sempre) e `quadro` (até o navegador
+  mostrar o quadro: só mede com a aba visível).
+- **Armadilha evitada:** letra menor que 10 px **não** é lembrada ao recarregar
+  (`FS_MINIMO_LEMBRADO`). Sem isso, um zoom que trava a página ficaria salvo e
+  a página abriria travada todas as vezes.
+- **Rolagem em tela gigante:** o teto de linhas por pedido é `max(2000, 2 x
+  linhas da tela)`, para uma página inteira sempre caber.
+
+### Medido (arquivo `letras_aleatorias_369693100.txt`, janela 1440 x 900 emulada)
+
+| Zoom | Caracteres na tela | Pintura (layout) |
+|---|---|---|
+| 100 % | 4.140 | 1 ms |
+| 25 % | 68 mil | 3 ms |
+| 12 % | 297 mil | 10 ms |
+| 5 % | 1,7 milhão | 46 ms |
+| 2,5 % | 6,9 milhões | 93 ms |
+| 1,8 % | 13,4 milhões | 193 ms |
+| 0,8 % | 72,8 milhões | 1.826 ms (travada, mas a aba segue viva) |
+
+**Isto é só o custo de layout no navegador de teste, sem os pixels e numa
+janela menor que a dele.** Em 3440 x 1440 há 2,4 vezes mais caracteres no mesmo
+zoom. O ponto de lag de verdade é o que ele vai medir no monitor dele.

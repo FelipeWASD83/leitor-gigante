@@ -36,8 +36,12 @@
     </form>
 
     <div class="ferramentas">
-      <button class="botao botao-quadrado" id="fonte-menos" type="button" aria-label="Letra menor" title="Letra menor" disabled>A−</button>
-      <button class="botao botao-quadrado" id="fonte-mais" type="button" aria-label="Letra maior" title="Letra maior" disabled>A+</button>
+      <div class="zoom" role="group" aria-label="Zoom da letra">
+        <button class="botao botao-quadrado" id="fonte-menos" type="button" aria-label="Afastar (letra menor)" title="Afastar: letra menor, mais caracteres na tela. Também Ctrl + roda do mouse" disabled>A−</button>
+        <input class="campo campo-zoom" id="zoom" type="text" inputmode="decimal" value="100" aria-label="Zoom em porcentagem (100 = letra de 16 px)" title="Zoom em %. Digite um valor e aperte Enter. Ctrl+0 volta para 100" spellcheck="false" disabled>
+        <span class="zoom-pct" aria-hidden="true">%</span>
+        <button class="botao botao-quadrado" id="fonte-mais" type="button" aria-label="Aproximar (letra maior)" title="Aproximar: letra maior" disabled>A+</button>
+      </div>
       <button class="botao" id="agrupar" type="button" aria-pressed="false" title="Separa os caracteres de 10 em 10, só na tela (o arquivo não muda)" disabled>Grupos de 10</button>
       <button class="botao" id="copiar" type="button" title="Copia o texto que está na tela" disabled>Copiar tela</button>
       <button class="botao botao-acao" id="abrir" type="button">Abrir arquivo</button>

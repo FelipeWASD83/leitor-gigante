@@ -5,6 +5,27 @@ const NF1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFr
 
 export const formatarNumero = (n) => NF.format(Math.round(n));
 
+/** O zoom é a letra em relação a 16 px (o tamanho de partida): 16 px = 100 %. */
+export const FS_PADRAO = 16;
+export const zoomDeFs = (fs) => (fs / FS_PADRAO) * 100;
+export const fsDeZoom = (zoom) => (zoom / 100) * FS_PADRAO;
+
+/** Zoom como aparece no contador: inteiro quando dá, senão até 2 casas (0,35 %). */
+export function formatarZoom(zoom) {
+  const casas = zoom >= 10 ? 0 : zoom >= 1 ? 1 : 2;
+  return zoom.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casas });
+}
+
+/** "35", "35%", "12,5 %" viram o número (em %); qualquer outra coisa vira null. */
+export function interpretarZoom(entrada) {
+  const m = String(entrada ?? '')
+    .trim()
+    .match(/^(\d+(?:[.,]\d+)?)\s*%?$/);
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(',', '.'));
+  return v > 0 ? v : null;
+}
+
 /** Tamanho como o Explorador do Windows mostra (base 1024, rótulo KB/MB/GB). */
 export function formatarBytes(n) {
   if (n < 1024) return `${NF.format(n)} bytes`;

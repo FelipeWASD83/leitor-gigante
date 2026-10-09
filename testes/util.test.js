@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { interpretarPosicao, formatarBytes, formatarPercentual } from '../js/util.js';
+import { interpretarPosicao, formatarBytes, formatarPercentual, formatarZoom, interpretarZoom, zoomDeFs, fsDeZoom } from '../js/util.js';
 import { compacto, gerarMarcas, fracaoDeY } from '../js/regua.js';
 
 const T = 369_693_100;
@@ -62,4 +62,26 @@ test('fracaoDeY fica entre 0 e 1', () => {
   assert.equal(fracaoDeY(-5, 10, 100), 0);
   assert.equal(fracaoDeY(60, 10, 100), 0.5);
   assert.equal(fracaoDeY(500, 10, 100), 1);
+});
+
+test('zoom: 16 px é 100 % e a conversão vai e volta', () => {
+  assert.equal(zoomDeFs(16), 100);
+  assert.equal(fsDeZoom(50), 8);
+  assert.equal(zoomDeFs(fsDeZoom(0.1)), 0.1);
+});
+
+test('zoom: o que o contador mostra', () => {
+  assert.equal(formatarZoom(100), '100');
+  assert.equal(formatarZoom(37.4), '37');
+  assert.equal(formatarZoom(5.25), '5,3');
+  assert.equal(formatarZoom(0.35), '0,35');
+});
+
+test('zoom: o que dá para digitar', () => {
+  assert.equal(interpretarZoom('35'), 35);
+  assert.equal(interpretarZoom(' 12,5 % '), 12.5);
+  assert.equal(interpretarZoom('0'), null);
+  assert.equal(interpretarZoom('-3'), null);
+  assert.equal(interpretarZoom('abc'), null);
+  assert.equal(interpretarZoom(''), null);
 });

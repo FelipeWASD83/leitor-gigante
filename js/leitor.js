@@ -16,7 +16,7 @@ const CODIFICADOR = new TextEncoder();
 const SO_ASCII = /^[\x00-\x7f]*$/;
 const CONTROLES = /[\u0000-\u0008\u000b-\u001f\u007f]/g;
 
-export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
+export function criarLeitor({ area, texto, sonda, aoAtualizar, aoMedir, aoErro }) {
   const e = {
     fonte: null,
     topo: 0,
@@ -31,6 +31,8 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
     maxChave: '',
     textoTela: '',
     visiveis: 0,
+    pinturaMs: 0,
+    quadroMs: 0,
   };
   let geracao = 0;
   let medidasSujas = true;
@@ -58,13 +60,39 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
     medidasSujas = false;
   }
 
+  /**
+   * Lê a partir de `topo` o bastante para `linhas` linhas. Começa supondo 1 byte
+   * por caractere (texto comum) e dobra a leitura se faltar (UTF-8 de até 4 bytes).
+   * Com a letra bem pequena a tela tem milhões de caracteres: ler 4x por garantia
+   * custaria centenas de MB à toa.
+   */
+  async function montarAdiante(f, topo, linhas) {
+    let folga = 1.05;
+    for (;;) {
+      const fim = Math.min(f.size, topo + Math.ceil(linhas * (e.cols + 2) * folga) + 16);
+      const buf = await f.ler(topo, fim);
+      const r = layoutAdiante(buf, topo, e.cols, linhas, fim >= f.size);
+      if (r.linhas.length >= linhas || fim >= f.size || folga >= 4) return { buf, r };
+      folga *= 2;
+    }
+  }
+
+  /** Posição `n` linhas antes de `topo` (mesma ideia: lê pouco e dobra se faltar). */
+  async function montarAtras(f, topo, n, opcoes) {
+    let folga = 1.05;
+    for (;;) {
+      const base = Math.max(0, topo - Math.ceil((n + 2) * (e.cols + 2) * folga) - MARGEM_PARA_TRAS);
+      const buf = await f.ler(base, topo);
+      const r = voltar(buf, base, buf.length, e.cols, n, opcoes);
+      if (r.passos >= n || base === 0 || folga >= 4) return base + r.pos;
+      folga *= 2;
+    }
+  }
+
   async function garantirMaxTopo(f) {
     const chave = `${e.cols}x${e.linhas}`;
     if (chave === e.maxChave) return;
-    const base = Math.max(0, f.size - (e.linhas * e.cols * 4 + MARGEM_PARA_TRAS));
-    const buf = await f.ler(base, f.size);
-    const { pos } = voltar(buf, base, buf.length, e.cols, e.linhas, { fimDoArquivo: true });
-    e.maxTopo = base + pos;
+    e.maxTopo = await montarAtras(f, f.size, e.linhas, { fimDoArquivo: true });
     e.maxChave = chave;
   }
 
@@ -80,19 +108,13 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
 
   /** Onde fica o topo `n` linhas depois (n > 0) ou antes (n < 0) de `topo`. */
   async function deslocar(f, topo, n) {
-    n = Math.max(-MAX_PASSO, Math.min(MAX_PASSO, n));
+    const teto = Math.max(MAX_PASSO, e.linhas * 2); // uma página sempre cabe, mesmo com a letra minúscula
+    n = Math.max(-teto, Math.min(teto, n));
     if (n > 0) {
-      const fim = Math.min(f.size, topo + (n + 1) * e.cols * 4 + 16);
-      const buf = await f.ler(topo, fim);
-      const r = layoutAdiante(buf, topo, e.cols, n + 1, fim >= f.size);
+      const { r } = await montarAdiante(f, topo, n + 1);
       return r.linhas.length > n ? r.linhas[n].ini : e.maxTopo;
     }
-    if (n < 0) {
-      const m = -n;
-      const base = Math.max(0, topo - (m + 2) * e.cols * 4 - MARGEM_PARA_TRAS);
-      const buf = await f.ler(base, topo);
-      return base + voltar(buf, base, buf.length, e.cols, m).pos;
-    }
+    if (n < 0) return montarAtras(f, topo, -n);
     return topo;
   }
 
@@ -142,13 +164,31 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
     if (g !== geracao) return;
     e.topo = Math.max(0, Math.min(e.topo, e.maxTopo));
 
-    const fim = Math.min(f.size, e.topo + e.linhas * e.cols * 4 + 16);
-    const buf = await f.ler(e.topo, fim);
+    const { buf, r } = await montarAdiante(f, e.topo, e.linhas);
     if (g !== geracao) return;
-    const r = layoutAdiante(buf, e.topo, e.cols, e.linhas, fim >= f.size);
     e.visiveis = Math.max(0, r.proximo - e.topo);
+    const t0 = performance.now();
     pintar(r, buf);
+    void texto.offsetHeight; // força o layout agora, para contar o que a letra pequena pesa
+    e.pinturaMs = performance.now() - t0;
     aoAtualizar?.(estado());
+    medirQuadro(t0);
+  }
+
+  /**
+   * Quanto o navegador levou de verdade para mostrar a tela (layout e pintura
+   * do DOM, que é onde a letra pequena pesa): do fim da montagem até logo depois
+   * do quadro. Não trava o desenho: se a aba estiver escondida, só não mede.
+   */
+  function medirQuadro(t0) {
+    const g = geracao;
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        if (g !== geracao) return;
+        e.quadroMs = performance.now() - t0;
+        aoMedir?.(estado());
+      }, 0),
+    );
   }
 
   function pintar(r, buf) {
@@ -246,6 +286,9 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
       cols: e.cols,
       linhas: e.linhas,
       maxTopo: e.maxTopo,
+      caracteres: e.linhas * e.cols,
+      pinturaMs: e.pinturaMs,
+      quadroMs: e.quadroMs,
     };
   }
 
@@ -255,7 +298,7 @@ export function criarLeitor({ area, texto, sonda, aoAtualizar, aoErro }) {
   area.addEventListener(
     'wheel',
     (ev) => {
-      if (!e.fonte) return;
+      if (!e.fonte || ev.ctrlKey || ev.metaKey) return; // Ctrl + roda é zoom: main.js
       ev.preventDefault();
       const dy = ev.shiftKey && Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY;
       let linhas = ev.deltaMode === 1 ? dy : ev.deltaMode === 2 ? dy * e.linhas : dy / e.lh;

@@ -451,9 +451,8 @@ body {
   }
 
   .ferramentas {
-    flex: 0 1 auto;
-    margin-left: auto;
-    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    justify-content: flex-end;
   }
 
   .texto {
@@ -480,4 +479,25 @@ body {
   .campo {
     transition: none;
   }
+}
+
+/* ---------- contador de zoom ---------- */
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--e1);
+}
+
+.campo-zoom {
+  width: 64px;
+  padding: 0 var(--e2);
+  text-align: right;
+  font-family: var(--fonte-mono);
+}
+
+.zoom-pct {
+  margin-right: var(--e1);
+  font: 12px/1 var(--fonte-mono);
+  color: var(--barra-fraco);
 }
