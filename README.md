@@ -25,23 +25,24 @@ abre na hora e a página usa uns 3 MB de memória.
    Enter vai para o próximo, Shift+Enter para o anterior. Onde há acertos,
    a régua fica marcada de vermelho. O botão **Aa** liga e desliga "ignorar
    maiúsculas" (só vale para A a Z, sem acento).
-5. **Zoom sem limite para afastar.** O contador no topo (`A−  100 %  A+`) é o
+5. **Zoom para afastar (mínimo de 7 %).** O contador no topo (`A−  100 %  A+`) é o
    tamanho da letra: 100 % é a letra de 16 px. Quanto menor o zoom, mais
    caracteres cabem na tela. Clique em A− ou A+, use **Ctrl + roda do mouse**,
    ou digite o valor no contador e aperte Enter (aceita `35`, `12,5`; **Ctrl+0**
    volta para 100). O rodapé mostra quantos caracteres estão na tela e quanto
-   tempo a pintura levou: use isso para me dizer em que zoom começa a lagar.
+   tempo a pintura levou.
    Um zoom abaixo de 63 % (letra menor que 10 px) não é lembrado ao recarregar,
    para a página nunca abrir já travada.
 6. **Grupos de 10** separa os caracteres de 10 em 10 só na tela (ótimo para ler
    dígitos; o arquivo não muda). **Copiar tela** copia o texto que está
    aparecendo.
 
-### Quando você achar o zoom onde começa a lagar
+### O limite de afastar
 
-No arquivo `js/main.js`, procure a linha `const ZOOM_MINIMO = 0.1;` e troque o
-número pelo zoom (em %) que você quer como limite. Hoje o limite é 0,1 %, ou
-seja, na prática não existe.
+O zoom mínimo é **7 %** (o ponto onde você disse que a tela começa a lagar).
+Para mudar, no arquivo `js/main.js` procure a linha `const ZOOM_MINIMO = 7;` e
+troque o número (em %). Digitar um valor menor que 7 no contador também
+funciona, mas ele para em 7 e avisa.
 
 ## Arquivos para testar
 

@@ -18,7 +18,7 @@ Resumo do que não pode ser esquecido:
 - Nada sai do navegador; não adicionar `fetch`, analytics nem fonte externa.
 - Barra, leitura e barra alternam escuro, claro, escuro; um vermelho de ação só;
   cores e medidas ficam em `css/tokens.css`.
-- Zoom de afastar sem limite de propósito (pedido dele): o limite é a constante
-  `ZOOM_MINIMO` em `js/main.js`, que ele vai definir depois de medir onde lagou.
+- Zoom de afastar com limite de 7 % (ele mediu onde a tela começa a lagar e
+  mandou fixar): é a constante `ZOOM_MINIMO` em `js/main.js`.
   Zoom com letra menor que 10 px não é salvo no `localStorage`, para a página
   não abrir travada.

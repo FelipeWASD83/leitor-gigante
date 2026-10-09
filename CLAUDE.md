@@ -132,15 +132,17 @@ sistema (peso zero), mono = Cascadia Mono/Consolas.
 
 ---
 
-## 7. Zoom sem limite (pedido dele em 09/10/2026)
+## 7. Zoom e o limite de 7 % (pedido dele em 09/10/2026)
 
-Ele pediu para remover o limite de afastar e para ter um contador, para dizer
-onde começa a lagar; esse ponto vira o limite novo.
+Ele pediu para remover o limite de afastar e ter um contador para achar onde
+começa a lagar. Mediu e mandou **colocar o limite em 7 %**: é o `ZOOM_MINIMO`.
+Antes disso o limite era 10 px de letra (62,5 %), e entre os dois ficou sem
+limite só durante a medição.
 
 - **Onde mexer:** `ZOOM_MINIMO` no começo de `js/main.js` (em %, 100 = letra de
-  16 px; hoje 0,1). `ZOOM_MAXIMO` (400) e `PASSO_ZOOM` (1,1 por clique ou giro
-  de roda) ficam ao lado. Trocar o número é tudo que falta quando ele disser o
-  zoom.
+  16 px; hoje **7**, ou seja, letra de 1,12 px). `ZOOM_MAXIMO` (400) e
+  `PASSO_ZOOM` (1,1 por clique ou giro de roda) ficam ao lado. Digitar menos
+  que o mínimo no contador trava no mínimo e mostra um aviso.
 - **Contador:** campo `#zoom` no topo (digita e dá Enter), A−/A+, Ctrl+roda e
   Ctrl+0. O rodapé mostra linhas x colunas, caracteres na tela, `pintura`
   (montar o DOM + forçar o layout, medido sempre) e `quadro` (até o navegador

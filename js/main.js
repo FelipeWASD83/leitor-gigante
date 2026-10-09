@@ -63,10 +63,10 @@ try {
 }
 
 // ---------- zoom ----------
-// LIMITE DE AFASTAR: hoje não há limite prático (0,1 % = letra de 0,016 px).
-// Quando o Felipe disser em que zoom a tela começa a lagar, é só trocar o
-// número de ZOOM_MINIMO (em %, onde 100 = letra de 16 px).
-const ZOOM_MINIMO = 0.1;
+// LIMITE DE AFASTAR: 7 %, o ponto onde o Felipe disse que a tela começa a lagar
+// (09/10/2026). Para mudar, é só trocar o número de ZOOM_MINIMO (em %, onde
+// 100 = letra de 16 px).
+const ZOOM_MINIMO = 7;
 const ZOOM_MAXIMO = 400;
 const PASSO_ZOOM = 1.1; // cada clique em A− / A+ e cada giro da roda com Ctrl
 // Letra menor que isto não é lembrada ao recarregar: com a tela cheia de
@@ -240,6 +240,7 @@ el.zoom.addEventListener('keydown', (ev) => {
     el.zoom.value = formatarZoom(zoomAtual());
     avisar('Zoom: digite um número maior que zero, por exemplo 50.');
   } else {
+    if (z < ZOOM_MINIMO) avisar(`O zoom mínimo é ${formatarZoom(ZOOM_MINIMO)} %: abaixo disso a tela começa a lagar.`);
     definirZoom(z);
   }
   el.texto.focus({ preventScroll: true });
