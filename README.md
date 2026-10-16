@@ -46,8 +46,9 @@ funciona, mas ele para em 7 e avisa.
 
 ## Arquivos para testar
 
-Ficam em `C:\Users\felipe\Documents\arquivos-gigantes` (fora do projeto, para
-não pesar nos backups da nuvem): `10_elevado_50.txt` e `10_elevado_100.txt` (o
+Ficam numa pasta fora do projeto, para não pesar nos backups da nuvem (aqui,
+`Documents\arquivos-gigantes`, mas o repositório não traz esses arquivos):
+`10_elevado_50.txt` e `10_elevado_100.txt` (o
 número escrito, um 1 e os zeros: 51 e 101 caracteres), `9_elevado_9_elevado_9.txt`
 (369.693.100 dígitos) e `letras_aleatorias_369693100.txt` (o mesmo tamanho, só
 letras de a a z sorteadas).
@@ -68,3 +69,7 @@ Nada sai do computador. A página não faz nenhuma requisição além de carrega
 os próprios arquivos, e o navegador só lê do disco o pedaço que aparece na tela
 (mais as varreduras da busca). Só ficam salvos no navegador o tamanho da letra,
 os grupos de 10 e o "Aa".
+
+## Licença
+
+Código sob a licença MIT (arquivo `LICENSE`).
